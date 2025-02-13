@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Healthcare Platform Demo</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap');
+
+    /* Base styles */
+    body {
+      font-family: 'Roboto', sans-serif;
+      background-color: #f0f4f8;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+    }
+
+    .card {
+      background-color: white;
+      border-radius: 16px;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+      padding: 32px;
+      width: 100%;
+      max-width: 680px;
+      animation: fadeIn 0.5s ease-in-out;
+    }
+
+    .card h1 {
+      font-size: 24px;
+      font-weight: 700;
+      margin-bottom: 24px;
+      color: #4a5568;
+    }
+
+    .search-container {
+      display: flex;
+      margin-bottom: 24px;
+    }
+
+    .search-container input[type="text"] {
+      flex-grow: 1;
+      padding: 12px 16px;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px 0 0 8px;
+      font-size: 16px;
+      color: #4a5568;
+      transition: border-color 0.3s ease-in-out;
+    }
+
+    .search-container input[type="text"]:focus {
+      outline: none;
+      border-color: #4299e1;
+    }
+
+    .search-container button {
+      background-color: #4299e1;
+      color: white;
+      font-size: 16px;
+      font-weight: 700;
+      padding: 12px 24px;
+      border-radius: 0 8px 8px 0;
+      border: none;
+      cursor: pointer;
+      transition: background-color 0.3s ease-in-out;
+    }
+
+    .search-container button:hover {
+      background-color: #3182ce;
+    }
+
+    .result-container {
+      margin-top: 24px;
+      padding: 24px;
+      border-radius: 8px;
+      background-color: #f0f4f8;
+      opacity: 0;
+      animation: fadeInUp 0.5s ease-in-out forwards;
+    }
+
+    .result-container h2 {
+      font-size: 18px;
+      font-weight: 700;
+      margin-bottom: 16px;
+      color: #4a5568;
+    }
+
+    .result-container ul {
+      list-style-type: none;
+      padding: 0;
+    }
+
+    .result-container li {
+      margin-bottom: 16px;
+    }
+
+    .result-container h3 {
+      font-size: 16px;
+      font-weight: 700;
+      color: #4a5568;
+      margin-bottom: 8px;
+    }
+
+    .result-container p {
+      font-size: 14px;
+      color: #718096;
+      line-height: 1.5;
+    }
+
+    /* Animations */
+    @keyframes fadeIn {
+      0% {
+        opacity: 0;
+        transform: translateY(-20px);
+      }
+      100% {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes fadeInUp {
+      0% {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      100% {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+  </style>
+</head>
+<body>
+  <div id="app" class="card">
+    <h1>Healthcare Platform Demo</h1>
+    <div class="search-container">
+      <input type="text" id="search-input" placeholder="Enter symptoms (e.g. 'headache and migraine')" v-model="searchQuery">
+      <button @click="generateQuery">Generate Query</button>
+    </div>
+    <div v-if="query" class="result-container">
+      <h2>Generated Query:</h2>
+      <pre>{{ query }}</pre>
+    </div>
+    <div v-if="results.length > 0" class="result-container">
+      <h2>Search Results:</h2>
+      <ul>
+        <li v-for="result in results">
+          <h3>{{ result.title }}</h3>
+          <p>{{ result.description }}</p>
+          <p v-if="result.type === 'case'">Case File</p>
+          <p v-if="result.type === 'research'">Research Paper</p>
+          <p v-if="result.type === 'drug'">Drug Details</p>
+        </li>
+      </ul>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/vue@2.6.14/dist/vue.js"></script>
+  <script>
+    new Vue({
+      el: '#app',
+      data: {
+        searchQuery: '',
+        query: null,
+        results: [
+          {
+            title: 'Migraine Management in Adults',
+            description: 'A comprehensive guide on the diagnosis and treatment of migraines, including the latest pharmacological and non-pharmacological approaches.',
+            type: 'research'
+          },
+          {
+            title: 'Case Study: Persistent Headaches in a 45-year-old Male',
+            description: 'This case report details the investigation and management of a patient presenting with recurrent, severe headaches.',
+            type: 'case'
+          },
+          {
+            title: 'Ibuprofen for Migraine Relief',
+            description: 'Ibuprofen is a common over-the-counter medication used to manage migraine symptoms. This article provides dosage recommendations and safety information.',
+            type: 'drug'
+          },
+          {
+            title: 'Botulinum Toxin for Chronic Migraine Prevention',
+            description: 'Recent studies have shown the efficacy of botulinum toxin injections in reducing the frequency and severity of migraines in chronic cases.',
+            type: 'research'
+          },
+          {
+            title: 'Case Report: Atypical Migraine with Aura in a 38-year-old Female',
+            description: 'This case report discusses the diagnosis and management of a patient presenting with unusual migraine symptoms, including visual disturbances and vertigo.',
+            type: 'case'
+          },
+          {
+            title: 'Sumatriptan for Acute Migraine Relief',
+            description: 'Sumatriptan is a widely used triptan medication for the treatment of migraine attacks. This article covers dosing, administration, and potential side effects.',
+            type: 'drug'
+          },
+          {
+            title: 'Migraine Triggers and Prevention Strategies',
+            description: 'This review article examines common migraine triggers, such as stress, hormonal changes, and dietary factors, and outlines effective prevention techniques.',
+            type: 'research'
+          },
+          {
+            title: 'Case Study: Hemiplegic Migraine in a 52-year-old Male',
+            description: 'A case report on the diagnosis and management of a patient with the rare and severe form of migraine known as hemiplegic migraine.',
+            type: 'case'
+          },
+          {
+            title: 'Ergotamine for Acute Migraine Treatment',
+            description: 'Ergotamine is an older medication used for the relief of migraine attacks. This article discusses its mechanism of action, dosing, and side effect profile.',
+            type: 'drug'
+          },
+          {
+            title: 'Migraine and Comorbid Conditions',
+            description: 'This research paper explores the relationship between migraine and other medical conditions, such as depression, anxiety, and cardiovascular disease.',
+            type: 'research'
+          }
+        ]
+      },
+      methods: {
+        generateQuery() {
+          const searchQuery = this.searchQuery.trim();
+          if (searchQuery) {
+            const isStudent = false; // Assuming the user is not a student
+            this.query = `(symptom:${searchQuery.replace(/\s/g, ' OR symptom:')}) AND (NOT student)`;
+            this.performSearch();
+          } else {
+            this.query = null;
+            this.results = [];
+          }
+        },
+        performSearch() {
+          // Simulate search and retrieve results
+          // In a real application, this would involve making an API call
+          // and updating the results based on the response
+
+          // For this demo, we'll filter the pre-populated results
+          this.results = this.results.filter(result => {
+            return result.type !== 'case'; // Hide case studies for non-students
+          });
+        }
+      }
+    });
+  </script>
+</body>
+</html>

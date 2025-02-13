@@ -1,0 +1,126 @@
+import pandas as pd
+import re
+
+class MedicalSearchQuery:
+    def __init__(self, file_path):
+        # Load the CSV data
+        self.df = pd.read_csv(file_path)
+        
+        # Extract unique terms from each relevant column, handling compound terms
+        self.columns = ["Gender", "Symptoms", "Occupation"]  # Customize as needed based on your CSV structure
+        self.unique_terms = self.extract_unique_terms()
+        print("Debug: Extracted unique terms:", self.unique_terms)  # Debug: Show unique terms
+    
+    def extract_unique_terms(self):
+        """
+        Extracts and normalizes unique terms from relevant columns in the DataFrame.
+
+        Returns:
+        dict: A dictionary where keys are column names and values are sets of unique individual terms.
+        """
+        unique_terms = {}
+        for col in self.columns:
+            if col in self.df.columns:
+                # Split compound terms, normalize to allow for flexible matching
+                terms = self.df[col].dropna().str.lower().str.split(',').explode().str.strip()
+                normalized_terms = set()
+                for term in terms:
+                    normalized_terms.add(term)
+                    normalized_terms.add(term.replace(" ", ""))  # e.g., "chest pain" -> "chestpain"
+                    normalized_terms.add(term.replace(" ", "-"))  # e.g., "chest pain" -> "chest-pain"
+                unique_terms[col] = normalized_terms
+            else:
+                print(f"Warning: Column '{col}' not found in the CSV.")  # Debug: Show missing columns
+        return unique_terms
+    
+    def parse_input(self, input_text):
+        """
+        Parses user input based on the unique terms extracted from the CSV file.
+
+        Parameters:
+        input_text (str): A natural language search input.
+
+        Returns:
+        dict: A dictionary with column names as keys and lists of matching terms as values.
+        """
+        parsed_terms = {col: [] for col in self.columns}
+        input_text = input_text.lower()  # Ensure case insensitivity
+        
+        # Track negations and specific conditions (like 'not a student')
+        negations = []
+        for negation in ["not a student", "not in school", "doesn't study", "non-student"]:
+            if negation in input_text:
+                negations.append("student")
+                input_text = input_text.replace(negation, "")  # Remove negation phrase
+
+        # Iterate over unique terms in each column to find matches in user input
+        for col, terms in self.unique_terms.items():
+            for term in terms:
+                pattern = rf"\b{term}\b"  # Match exact term variations
+                if re.search(pattern, input_text, re.IGNORECASE):
+                    parsed_terms[col].append(term.replace("-", " "))  # Standardize format to original terms
+        
+        # Remove empty categories and print parsed terms for debugging
+        parsed_terms = {k: v for k, v in parsed_terms.items() if v}
+        print("Debug: Parsed terms based on input:", parsed_terms, "Negations:", negations)  # Debug: Show parsed terms and negations
+        return parsed_terms, negations
+
+    def generate_boolean_query(self, parsed_terms, negations):
+        """
+        Generates a Boolean query in the required format, handling negations.
+
+        Parameters:
+        parsed_terms (dict): A dictionary where keys are column names
+                             and values are lists of matching terms.
+        negations (list): A list of negated terms.
+
+        Returns:
+        str: The generated Boolean query.
+        """
+        if not parsed_terms:
+            print("Debug: No parsed terms found. Empty query generated.")
+            return "No matching terms found in the input."
+
+        query_parts = []
+        
+        # Process parsed terms with AND/OR
+        for _, terms in parsed_terms.items():
+            # Format terms with quotes and join with OR for symptoms, occupations, etc.
+            formatted_terms = " OR ".join([f'"{term}"' for term in terms])
+            query_parts.append(f"({formatted_terms})")
+        
+        # Add negations with NOT
+        if negations:
+            negation_terms = " OR ".join([f'"{negation}"' for negation in negations])
+            query_parts.append(f"NOT ({negation_terms})")
+        
+        # Combine all parts with AND
+        final_query = " AND ".join(query_parts)
+        return final_query
+
+    def get_boolean_query(self, input_text):
+        """
+        Generates and returns the Boolean query in the specified format.
+
+        Parameters:
+        input_text (str): A natural language search input.
+
+        Returns:
+        str: The generated Boolean query.
+        """
+        parsed_terms, negations = self.parse_input(input_text)
+        boolean_query = self.generate_boolean_query(parsed_terms, negations)
+        return boolean_query
+
+# Example usage
+if __name__ == "__main__":
+    file_path = "C:/Users/Intel/Documents/med/meddata.csv"
+    search_query = MedicalSearchQuery(file_path)
+    
+    # User input prompt
+    input_text = input("Enter your search query (e.g., 'a man with headache and not a student'): ")
+    
+    # Generate and print Boolean query
+    boolean_query = search_query.get_boolean_query(input_text)
+    print("Generated Boolean Query:")
+    print(boolean_query)
